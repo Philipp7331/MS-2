@@ -25,8 +25,10 @@ public class Simulation {
     int leaveBecauseFull;
     int queueCapacity;
     boolean log;
+    private LinkedList<Server> serverList;
+    private int numberOfServers;
 
-    HashMap<Integer, Integer> dwellTime = new HashMap<>();
+    HashMap<Integer, Integer> waitingTime = new HashMap<>();
 
     /**
      * initiates values for simulation
@@ -44,6 +46,29 @@ public class Simulation {
         this.leaveBecauseFull = 0;
         this.queueCapacity = 10;
         this.log = log;
+        this.numberOfServers = 3;
+        this.serverList = new LinkedList<>();
+    }
+
+    /**
+     * Creates servers for simulation run
+     */
+    private void createServers() {
+        for (int i = 0; i < this.numberOfServers ; i++) serverList.add(new Server(false));
+    }
+
+    /**
+     * Returns server which are free
+     * @return list of free servers
+     */
+    private LinkedList<Server> freeServers() {
+        LinkedList<Server> freeServerList = new LinkedList<>();
+        for (Server s : serverList) {
+            if(!s.blocked) {
+                freeServerList.add(s);
+            }
+        }
+        return freeServerList;
     }
 
 
@@ -54,12 +79,14 @@ public class Simulation {
      * creates log if this.log is true
      */
     private void run() {
+        createServers();
+
         int currentId = 0;
         while (!eventList.isEmpty() || systemTime <= maxTime) {
             if (systemTime <= maxTime && nextCarArrivalTime == systemTime) {
-                carArrivalTime = ((int) (Math.random() * (121 - 30)) + 30) + systemTime;
+                carArrivalTime = ((int) (Math.random() * (181 - 120)) + 120) + systemTime;
                 if (carArrivalTime <= getMaxTime()) {
-                    int peopleInNextCar = (int) (Math.random() * (6 - 1)) + 1;
+                    int peopleInNextCar = (int) (Math.random() * (4 - 1)) + 1;
                     peopleInCar.add(peopleInNextCar);
                     peopleInLane.add(carsInSystem);
                     Arriving arriving = new Arriving(carArrivalTime, ++currentId, peopleInNextCar);
@@ -68,21 +95,29 @@ public class Simulation {
                 }
             }
 
+            if (!eventList.isEmpty() && !freeServers().isEmpty()) {
+                LinkedList<Server> servers = freeServers();
+                for (int i = 0; i < eventList.size(); i++) {
+                    if(eventList.get(i) instanceof Testing) {
+                        ((Testing) eventList.get(i)).server = servers.getFirst();
+                        servers.remove(servers.getFirst());
+                        ((Testing) eventList.get(i)).server.blocked = true;
+                        eventList.get(i).setTimeStamp(systemTime);
+                        eventList.get(i).processEvent(this);
+                    }
+                    if(servers.isEmpty()) break;
+                }
+            }
+
             if (!eventList.isEmpty() && eventList.getFirst().getTimeStamp() == systemTime) {
                 int length = eventList.size();
                 for (int i = 0; i < length; i++) {
                     if (eventList.getFirst().getTimeStamp() == systemTime) {
                         eventList.getFirst().processEvent(this);
-                        if (carsInSystem > queueCapacity) {
-                            if (this.log) System.out.println(", #Cars in the system = Capacity reached!");
-                        } else if (!eventList.isEmpty() && this.systemTime > this.maxTime && eventList.getFirst() instanceof Arriving) {
-                            if (this.log) System.out.println(", time limit reached!}");
-                        } else {
-                            if (this.log) System.out.println(", #Cars in the system = " + carsInSystem + "}");
-                        }
                     }
                 }
             }
+
             systemTime++;
         }
     }
@@ -181,7 +216,7 @@ public class Simulation {
 
         Simulation simp = new Simulation(true);
         simp.run();
-
+/*
         double averagePeopleInCar = simp.peopleInCar
                 .stream()
                 .mapToInt(Integer::intValue)
@@ -198,8 +233,8 @@ public class Simulation {
         System.out.println("Average cars in testing lane: " + averageCarsInTestingLane);
 
         System.out.println("Leaving because of full queue: " + simp.leaveBecauseFull);
-
-
+*/
+/*
         HashMap<Integer, Double> averageLeavings = new HashMap<>();
         for (int i = 10; i < 20; i += 2) {
             ArrayList<Integer> averageLeaving = new ArrayList<>();
@@ -219,7 +254,7 @@ public class Simulation {
         System.out.println("increase for 14: " + averageLeavings.get(10) / averageLeavings.get(14) * 100 + " %");
         System.out.println("increase for 16: " + averageLeavings.get(10) / averageLeavings.get(16) * 100 + " %");
         System.out.println("increase for 18: " + averageLeavings.get(10) / averageLeavings.get(18) * 100 + " %");
-
+*/
         //writeList("vehiclesOverTime.csv", simp.peopleInLane);
         //writeMap("dwellTime.csv", simp.dwellTime);
 

@@ -44,6 +44,8 @@ abstract class Event {
         return NoPeopleInCar;
     }
 
+    public void setTimeStamp(int timeStamp) { this.timeStamp = timeStamp; }
+
     @Override
     public String toString() {
         return "{" +

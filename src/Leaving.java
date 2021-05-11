@@ -7,6 +7,8 @@
 
 class Leaving extends Event {
 
+    Server server = null;
+
     /**
      * initiates values for Leaving
      * @param timeStamp time at which an event takes place
@@ -23,8 +25,9 @@ class Leaving extends Event {
      */
     @Override
     void processEvent(Simulation simp) {
+        server.blocked = false;
         simp.removeEvent(this);
-        if (simp.log) System.out.print(this.toString() + ", Event type = Leaving");
+        if (simp.log) System.out.println(this.toString() + ", Event type = Leaving" + ", Server: " +  server.id);
         simp.carsInSystem--;
     }
 }

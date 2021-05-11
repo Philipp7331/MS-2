@@ -7,6 +7,8 @@
 
 class Testing extends Event {
 
+    Server server = null;
+
     /**
      * initiates values for Testing
      * @param timeStamp time at which an event takes place
@@ -18,16 +20,18 @@ class Testing extends Event {
     }
 
     /**
+     *
      * processes the actions for Testing events and creates Leaving events
      * @param simp the current simulation object
      */
     @Override
     void processEvent(Simulation simp) {
-        int timeToLeave = this.getNoPeopleInCar() * 240;
-        Leaving leaving = new Leaving(timeToLeave + this.getTimeStamp(), this.getCarIdentNo(), this.getNoPeopleInCar());
-        simp.dwellTime.put(this.getCarIdentNo(), timeToLeave + this.getTimeStamp() - simp.dwellTime.get(this.getCarIdentNo()));
+        int timeToLeave = this.getNoPeopleInCar() * 120;
+        Leaving leaving = new Leaving(this.getTimeStamp() + timeToLeave, this.getCarIdentNo(), this.getNoPeopleInCar());
+        leaving.server = server;
+        simp.waitingTime.put(this.getCarIdentNo(), this.getTimeStamp() - simp.waitingTime.get(this.getCarIdentNo()));
         simp.removeEvent(this);
         simp.addEvent(leaving);
-        if (simp.log) System.out.print(this.toString() + ", Event type = Testing");
+        if (simp.log) System.out.println(this.toString() + ", Event type = Testing" + ", Server: " +  server.id);
     }
 }
