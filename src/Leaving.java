@@ -15,8 +15,8 @@ class Leaving extends Event {
      * @param carIdentNo ID of the car
      * @param noPeopleInCar number of people in the car
      */
-    Leaving(int timeStamp, int carIdentNo, int noPeopleInCar) {
-        super(timeStamp, carIdentNo, noPeopleInCar);
+    Leaving(int timeStamp, int carIdentNo, int noPeopleInCar, Simulation simp) {
+        super(timeStamp, carIdentNo, noPeopleInCar, simp);
     }
 
     /**
@@ -27,7 +27,9 @@ class Leaving extends Event {
     void processEvent(Simulation simp) {
         server.blocked = false;
         simp.removeEvent(this);
-        if (simp.log) System.out.println(this.toString() + ", Event type = Leaving" + ", Server: " +  server.id);
+        simp.processTimes.put(this.getCarIdentNo(), this.getTimeStamp() - simp.processTimes.get(this.getCarIdentNo()));
+
+        if (simp.log) System.out.println(this.toString() + ", People in car: " + getNoPeopleInCar() + ", Event type = Leaving" + ", Server: " +  server.id);
         simp.carsInSystem--;
     }
 }

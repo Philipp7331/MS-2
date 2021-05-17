@@ -13,6 +13,7 @@ abstract class Event {
     private int timeStamp;
     private int carIdentNo;
     private int NoPeopleInCar;
+    Simulation simp;
 
     abstract void processEvent(Simulation simulation);
 
@@ -22,10 +23,11 @@ abstract class Event {
      * @param carIdentNo ID of the car
      * @param noPeopleInCar number of people in the car
      */
-    Event(int timeStamp, int carIdentNo, int noPeopleInCar) {
+    Event(int timeStamp, int carIdentNo, int noPeopleInCar, Simulation simp) {
         this.timeStamp = timeStamp;
         this.carIdentNo = carIdentNo;
         this.NoPeopleInCar = noPeopleInCar;
+        this.simp = simp;
     }
 
     /**
@@ -44,7 +46,7 @@ abstract class Event {
         return NoPeopleInCar;
     }
 
-    public void setTimeStamp(int timeStamp) { this.timeStamp = timeStamp; }
+    void setTimeStamp(int timeStamp) { this.timeStamp = timeStamp; }
 
     @Override
     public String toString() {

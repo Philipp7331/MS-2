@@ -20,51 +20,51 @@ public class Simulation {
     private int nextCarArrivalTime;
     private int maxTime;
     int carsInSystem;
-    private ArrayList<Integer> peopleInCar;
-    private ArrayList<Integer> peopleInLane;
-    int leaveBecauseFull;
-    int queueCapacity;
     boolean log;
     private LinkedList<Server> serverList;
     private int numberOfServers;
-
-    HashMap<Integer, Integer> waitingTime = new HashMap<>();
+    HashMap<Integer, Integer> waitingTimes;
+    HashMap<Integer, Integer> processTimes;
+    private HashMap<Integer, Integer> dwellTimes;
+    private String queuePrinciple;
 
     /**
      * initiates values for simulation
+     *
      * @param log whether or not a log should be printed to the console
      */
-    private Simulation(boolean log) {
+    private Simulation(boolean log, String queuePrinciple) {
         this.eventList = new LinkedList<>();
         this.systemTime = 0;
         this.carArrivalTime = 0;
         this.nextCarArrivalTime = 0;
         this.maxTime = 7200;
         this.carsInSystem = 0;
-        this.peopleInCar = new ArrayList<>();
-        this.peopleInLane = new ArrayList<>();
-        this.leaveBecauseFull = 0;
-        this.queueCapacity = 10;
         this.log = log;
         this.numberOfServers = 3;
         this.serverList = new LinkedList<>();
+        this.waitingTimes = new HashMap<>();
+        this.processTimes = new HashMap<>();
+        this.dwellTimes = new HashMap<>();
+        this.queuePrinciple = queuePrinciple;
     }
 
     /**
      * Creates servers for simulation run
      */
     private void createServers() {
-        for (int i = 0; i < this.numberOfServers ; i++) serverList.add(new Server(false));
+        for (int i = 0; i < this.numberOfServers; i++) serverList.add(new Server(false));
     }
 
     /**
      * Returns server which are free
+     *
      * @return list of free servers
      */
     private LinkedList<Server> freeServers() {
         LinkedList<Server> freeServerList = new LinkedList<>();
         for (Server s : serverList) {
-            if(!s.blocked) {
+            if (!s.blocked) {
                 freeServerList.add(s);
             }
         }
@@ -85,35 +85,37 @@ public class Simulation {
         while (!eventList.isEmpty() || systemTime <= maxTime) {
             if (systemTime <= maxTime && nextCarArrivalTime == systemTime) {
                 carArrivalTime = ((int) (Math.random() * (181 - 120)) + 120) + systemTime;
+                //TODO
+                //carArrivalTime = ((int) (Math.random() * (121 - 60)) + 60) + systemTime;
                 if (carArrivalTime <= getMaxTime()) {
-                    int peopleInNextCar = (int) (Math.random() * (4 - 1)) + 1;
-                    peopleInCar.add(peopleInNextCar);
-                    peopleInLane.add(carsInSystem);
-                    Arriving arriving = new Arriving(carArrivalTime, ++currentId, peopleInNextCar);
+                    int peopleInNextCar = (int) (Math.random() * (7 - 1)) + 1;
+                    Arriving arriving = new Arriving(carArrivalTime, ++currentId, peopleInNextCar, this);
                     addEvent(arriving);
                     nextCarArrivalTime = carArrivalTime;
                 }
             }
 
+            // execute testing events if a server is available
             if (!eventList.isEmpty() && !freeServers().isEmpty()) {
                 LinkedList<Server> servers = freeServers();
                 for (int i = 0; i < eventList.size(); i++) {
-                    if(eventList.get(i) instanceof Testing) {
+                    if (eventList.get(i) instanceof Testing) {
                         ((Testing) eventList.get(i)).server = servers.getFirst();
                         servers.remove(servers.getFirst());
                         ((Testing) eventList.get(i)).server.blocked = true;
                         eventList.get(i).setTimeStamp(systemTime);
                         eventList.get(i).processEvent(this);
                     }
-                    if(servers.isEmpty()) break;
+                    if (servers.isEmpty()) break;
                 }
             }
 
-            if (!eventList.isEmpty() && eventList.getFirst().getTimeStamp() == systemTime) {
-                int length = eventList.size();
-                for (int i = 0; i < length; i++) {
-                    if (eventList.getFirst().getTimeStamp() == systemTime) {
-                        eventList.getFirst().processEvent(this);
+            // execute Arriving and Leaving events
+            if (!eventList.isEmpty()) {
+                for (int i = 0; i < eventList.size(); i++) {
+                    if (eventList.get(i).getTimeStamp() == systemTime && !(eventList.get(i) instanceof Testing)) {
+                        eventList.get(i).processEvent(this);
+                        i -= 1;
                     }
                 }
             }
@@ -125,38 +127,57 @@ public class Simulation {
 
     /**
      * gets max time
+     *
      * @return max simulation time
      */
     private int getMaxTime() {
         return maxTime;
     }
 
-
     static class timeComparator implements Comparator<Event> {
 
         /**
          * compares two events and returns true if they are in order
+         *
          * @param e1 first event
          * @param e2 second event
          * @return boolean
          */
         @Override
         public int compare(Event e1, Event e2) {
-            return Integer.compare(e1.getTimeStamp(), e2.getTimeStamp());
+            Simulation simp = e1.simp;
+            switch (simp.queuePrinciple) {
+                case "FIFO":
+                    return Integer.compare(e1.getTimeStamp(), e2.getTimeStamp());
+                case "LIFO":
+                    return Integer.compare(e2.getTimeStamp(), e1.getTimeStamp());
+                case "SPT":
+                    return Integer.compare(e1.getNoPeopleInCar(), e2.getNoPeopleInCar());
+                case "LPT":
+                    return Integer.compare(e2.getNoPeopleInCar(), e1.getNoPeopleInCar());
+            }
+            return 0;
         }
     }
 
     /**
      * adds an event to the eventlist and sorts the eventlist based on timestamp
+     *
      * @param event of type Arriving, Testing or Leaving
      */
     void addEvent(Event event) {
+
         eventList.add(event);
         eventList.sort(new timeComparator());
+        /*System.out.println("New Loop:");
+        for (int i = 0; i <  eventList.size(); i++) {
+            System.out.println(eventList.get(i).toString());
+        }*/
     }
 
     /**
      * removes an event from the eventlist
+     *
      * @param event of type Arriving, Testing or Leaving
      */
     void removeEvent(Event event) {
@@ -165,8 +186,9 @@ public class Simulation {
 
     /**
      * writes list to a csv file
+     *
      * @param dataname name of the csv file
-     * @param list list of Integers
+     * @param list     list of Integers
      */
     public static void writeList(String dataname, ArrayList<Integer> list) {
         try (BufferedWriter nbf = new BufferedWriter(
@@ -174,7 +196,7 @@ public class Simulation {
                         new FileOutputStream(dataname, true)))) {
 
             int counter = 0;
-            for (int i:list) {
+            for (int i : list) {
                 nbf.write((list.size() > counter) ? i + "," : i + "");
                 counter++;
                 nbf.newLine();
@@ -187,16 +209,17 @@ public class Simulation {
 
     /**
      * writes hash map to a csv file
+     *
      * @param dataname name of the csv file
-     * @param map map of Integers
+     * @param map      map of Integers
      */
-    public static void writeMap(String dataname, HashMap<Integer, Integer> map){
+    public static void writeMap(String dataname, HashMap<Integer, Integer> map) {
         try (BufferedWriter nbf = new BufferedWriter(
                 new OutputStreamWriter(
                         new FileOutputStream(dataname, true)))) {
 
             int counter = 0;
-            for (Map.Entry<Integer,Integer> time: map.entrySet()) {
+            for (Map.Entry<Integer, Integer> time : map.entrySet()) {
                 nbf.write((map.size() > counter) ? time.getValue() + "," : time.getValue() + "");
                 counter++;
                 nbf.newLine();
@@ -206,16 +229,50 @@ public class Simulation {
         }
     }
 
+    private int avgTime(HashMap<Integer, Integer> map) {
+        int sum = 0;
+        for (int i : map.values()) {
+            sum += i;
+        }
+        //map.size();
+        //System.out.println("SUM = " + sum + ", SIZE = " + map.size());
+        return sum / map.size();
+    }
 
     /**
      * creates Simulation objects and runs them
      * calculates different values for task 1.3
+     *
      * @param args arguments for the program
      */
     public static void main(String[] args) {
 
-        Simulation simp = new Simulation(true);
-        simp.run();
+        //Simulation simp = new Simulation(true, "FIFO");
+        //simp.run();
+
+        /*
+        simp.waitingTimes.forEach((k, v) -> {
+            System.out.println("ID: " + k + ", waiting time: " + v);
+        });
+
+        System.out.println("Process Time:");
+        simp.processTimes.forEach((k, v) -> {
+            System.out.println("ID: " + k + ", process time: " + v);
+        });
+
+        for(Map.Entry<Integer, Integer> entry : simp.waitingTimes.entrySet()) {
+            int key = entry.getKey();
+            simp.dwellTimes.put(key, simp.waitingTimes.get(key) + simp.processTimes.get(key));
+        }
+         */
+
+        // print the average waiting, process and dwell time
+        // TODO when waiting time is > 1, the dwell time is wait+process+1 and not wait+process
+        //System.out.println(simp.avgTime(simp.waitingTimes));
+        //System.out.println(simp.avgTime(simp.processTimes));
+        //System.out.println(simp.avgTime(simp.dwellTimes));
+
+
 /*
         double averagePeopleInCar = simp.peopleInCar
                 .stream()
@@ -234,6 +291,134 @@ public class Simulation {
 
         System.out.println("Leaving because of full queue: " + simp.leaveBecauseFull);
 */
+
+        // case FIFO
+        System.out.println("-------------CASE FIFO-------------");
+        ArrayList<Integer> fifoWaitingTimes = new ArrayList<>();
+        ArrayList<Integer> fifoProcessingTimes = new ArrayList<>();
+        ArrayList<Integer> fifoDwellTimes = new ArrayList<>();
+        for (int j = 0; j < 1000; j++) {
+            Simulation s = new Simulation(false, "FIFO");
+            s.run();
+            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
+            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
+                int key = entry.getKey();
+                s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
+            }
+            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+        }
+        System.out.println("FIFO average waiting time: " + fifoWaitingTimes.stream()
+                                                                .mapToDouble(d -> d)
+                                                                .average()
+                                                                .orElse(0.0));
+        System.out.println("FIFO average processing time: " + fifoProcessingTimes.stream()
+                                                                .mapToDouble(d -> d)
+                                                                .average()
+                                                                .orElse(0.0));
+        System.out.println("FIFO average dwell time: " + fifoDwellTimes.stream()
+                                                                .mapToDouble(d -> d)
+                                                                .average()
+                                                                .orElse(0.0));
+        System.out.println("-------------END CASE FIFO-------------");
+        System.out.println();
+
+
+        // case FIFO
+        System.out.println("-------------CASE LIFO-------------");
+        ArrayList<Integer> lifoWaitingTimes = new ArrayList<>();
+        ArrayList<Integer> lifoProcessingTimes = new ArrayList<>();
+        ArrayList<Integer> lifoDwellTimes = new ArrayList<>();
+        for (int j = 0; j < 1000; j++) {
+            Simulation s = new Simulation(false, "LIFO");
+            s.run();
+            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
+            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
+                int key = entry.getKey();
+                s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
+            }
+            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+        }
+        System.out.println("LIFO average waiting time: " + fifoWaitingTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("LIFO average processing time: " + fifoProcessingTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("LIFO average dwell time: " + fifoDwellTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("-------------END CASE LIFO-------------");
+        System.out.println();
+
+
+        // case FIFO
+        System.out.println("-------------CASE SPT-------------");
+        ArrayList<Integer> sptWaitingTimes = new ArrayList<>();
+        ArrayList<Integer> sptProcessingTimes = new ArrayList<>();
+        ArrayList<Integer> sptDwellTimes = new ArrayList<>();
+        for (int j = 0; j < 1000; j++) {
+            Simulation s = new Simulation(false, "SPT");
+            s.run();
+            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
+            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
+                int key = entry.getKey();
+                s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
+            }
+            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+        }
+        System.out.println("SPT average waiting time: " + fifoWaitingTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("SPT average processing time: " + fifoProcessingTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("SPT average dwell time: " + fifoDwellTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("-------------END CASE SPT-------------");
+        System.out.println();
+
+
+        // case FIFO
+        System.out.println("-------------CASE LPT-------------");
+        ArrayList<Integer> lptWaitingTimes = new ArrayList<>();
+        ArrayList<Integer> lptProcessingTimes = new ArrayList<>();
+        ArrayList<Integer> lptDwellTimes = new ArrayList<>();
+        for (int j = 0; j < 1000; j++) {
+            Simulation s = new Simulation(false, "LPT");
+            s.run();
+            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
+            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
+                int key = entry.getKey();
+                s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
+            }
+            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+        }
+        System.out.println("LPT average waiting time: " + fifoWaitingTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("LPT average processing time: " + fifoProcessingTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("LPT average dwell time: " + fifoDwellTimes.stream()
+                .mapToDouble(d -> d)
+                .average()
+                .orElse(0.0));
+        System.out.println("-------------END CASE LPT-------------");
+
+
 /*
         HashMap<Integer, Double> averageLeavings = new HashMap<>();
         for (int i = 10; i < 20; i += 2) {

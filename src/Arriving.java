@@ -14,8 +14,8 @@ class Arriving extends Event {
      * @param carIdentNo    ID of the car
      * @param noPeopleInCar number of people in the car
      */
-    Arriving(int timeStamp, int carIdentNo, int noPeopleInCar) {
-        super(timeStamp, carIdentNo, noPeopleInCar);
+    Arriving(int timeStamp, int carIdentNo, int noPeopleInCar, Simulation simp) {
+        super(timeStamp, carIdentNo, noPeopleInCar, simp);
     }
 
     /**
@@ -28,11 +28,11 @@ class Arriving extends Event {
     void processEvent(Simulation simp) {
 
         simp.carsInSystem++;
-        simp.waitingTime.put(this.getCarIdentNo(), this.getTimeStamp());
-        Testing testing = new Testing(0, this.getCarIdentNo(), this.getNoPeopleInCar());
+        simp.waitingTimes.put(this.getCarIdentNo(), this.getTimeStamp());
+        Testing testing = new Testing(this.getTimeStamp(), this.getCarIdentNo(), this.getNoPeopleInCar(), simp);
         simp.removeEvent(this);
         simp.addEvent(testing);
-        if (simp.log) System.out.println(this.toString() + ", Event type = Arriving");
+        if (simp.log) System.out.println(this.toString()+ ", People in car: " + getNoPeopleInCar() + ", Event type = Arriving");
 
     }
 
