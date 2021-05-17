@@ -320,7 +320,7 @@ public class Simulation {
                                                                 .mapToDouble(d -> d)
                                                                 .average()
                                                                 .orElse(0.0));
-        System.out.println("-------------END CASE FIFO-------------");
+        System.out.println("-----------END CASE FIFO------------");
         System.out.println();
 
 
@@ -332,27 +332,27 @@ public class Simulation {
         for (int j = 0; j < 1000; j++) {
             Simulation s = new Simulation(false, "LIFO");
             s.run();
-            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
-            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            lifoWaitingTimes.add(s.avgTime(s.waitingTimes));
+            lifoProcessingTimes.add(s.avgTime(s.processTimes));
             for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
                 int key = entry.getKey();
                 s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
             }
-            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+            lifoDwellTimes.add(s.avgTime(s.dwellTimes));
         }
-        System.out.println("LIFO average waiting time: " + fifoWaitingTimes.stream()
+        System.out.println("LIFO average waiting time: " + lifoWaitingTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("LIFO average processing time: " + fifoProcessingTimes.stream()
+        System.out.println("LIFO average processing time: " + lifoProcessingTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("LIFO average dwell time: " + fifoDwellTimes.stream()
+        System.out.println("LIFO average dwell time: " + lifoDwellTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("-------------END CASE LIFO-------------");
+        System.out.println("-----------END CASE LIFO------------");
         System.out.println();
 
 
@@ -364,27 +364,27 @@ public class Simulation {
         for (int j = 0; j < 1000; j++) {
             Simulation s = new Simulation(false, "SPT");
             s.run();
-            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
-            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            sptWaitingTimes.add(s.avgTime(s.waitingTimes));
+            sptProcessingTimes.add(s.avgTime(s.processTimes));
             for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
                 int key = entry.getKey();
                 s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
             }
-            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+            sptDwellTimes.add(s.avgTime(s.dwellTimes));
         }
-        System.out.println("SPT average waiting time: " + fifoWaitingTimes.stream()
+        System.out.println("SPT average waiting time: " + sptWaitingTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("SPT average processing time: " + fifoProcessingTimes.stream()
+        System.out.println("SPT average processing time: " + sptProcessingTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("SPT average dwell time: " + fifoDwellTimes.stream()
+        System.out.println("SPT average dwell time: " + sptDwellTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("-------------END CASE SPT-------------");
+        System.out.println("-----------END CASE SPT------------");
         System.out.println();
 
 
@@ -396,27 +396,27 @@ public class Simulation {
         for (int j = 0; j < 1000; j++) {
             Simulation s = new Simulation(false, "LPT");
             s.run();
-            fifoWaitingTimes.add(s.avgTime(s.waitingTimes));
-            fifoProcessingTimes.add(s.avgTime(s.processTimes));
+            lptWaitingTimes.add(s.avgTime(s.waitingTimes));
+            lptProcessingTimes.add(s.avgTime(s.processTimes));
             for(Map.Entry<Integer, Integer> entry : s.waitingTimes.entrySet()) {
                 int key = entry.getKey();
                 s.dwellTimes.put(key, s.waitingTimes.get(key) + s.processTimes.get(key));
             }
-            fifoDwellTimes.add(s.avgTime(s.dwellTimes));
+            lptDwellTimes.add(s.avgTime(s.dwellTimes));
         }
-        System.out.println("LPT average waiting time: " + fifoWaitingTimes.stream()
+        System.out.println("LPT average waiting time: " + lptWaitingTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("LPT average processing time: " + fifoProcessingTimes.stream()
+        System.out.println("LPT average processing time: " + lptProcessingTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("LPT average dwell time: " + fifoDwellTimes.stream()
+        System.out.println("LPT average dwell time: " + lptDwellTimes.stream()
                 .mapToDouble(d -> d)
                 .average()
                 .orElse(0.0));
-        System.out.println("-------------END CASE LPT-------------");
+        System.out.println("-----------END CASE LPT------------");
 
 
 /*
