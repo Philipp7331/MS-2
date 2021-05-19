@@ -8,7 +8,6 @@
 class Testing extends Event {
 
     Server server = null;
-    int arrivalTime;
 
     /**
      * initiates values for Testing

@@ -85,10 +85,9 @@ public class Simulation {
         while (!eventList.isEmpty() || systemTime <= maxTime) {
             if (systemTime <= maxTime && nextCarArrivalTime == systemTime) {
                 carArrivalTime = ((int) (Math.random() * (181 - 120)) + 120) + systemTime;
-                //TODO
-                //carArrivalTime = ((int) (Math.random() * (121 - 60)) + 60) + systemTime;
                 if (carArrivalTime <= getMaxTime()) {
-                    int peopleInNextCar = (int) (Math.random() * (7 - 1)) + 1;
+                    // change this value to get relevant output for task 2.1.3
+                    int peopleInNextCar = (int) (Math.random() * (4 - 1)) + 1;
                     Arriving arriving = new Arriving(carArrivalTime, ++currentId, peopleInNextCar, this);
                     addEvent(arriving);
                     nextCarArrivalTime = carArrivalTime;
@@ -138,7 +137,7 @@ public class Simulation {
 
         /**
          * compares two events and returns true if they are in order
-         *
+         * differentiates between different queuing principles with switch case
          * @param e1 first event
          * @param e2 second event
          * @return boolean
@@ -169,10 +168,6 @@ public class Simulation {
 
         eventList.add(event);
         eventList.sort(new timeComparator());
-        /*System.out.println("New Loop:");
-        for (int i = 0; i <  eventList.size(); i++) {
-            System.out.println(eventList.get(i).toString());
-        }*/
     }
 
     /**
@@ -184,58 +179,12 @@ public class Simulation {
         eventList.remove(event);
     }
 
-    /**
-     * writes list to a csv file
-     *
-     * @param dataname name of the csv file
-     * @param list     list of Integers
-     */
-    public static void writeList(String dataname, ArrayList<Integer> list) {
-        try (BufferedWriter nbf = new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(dataname, true)))) {
-
-            int counter = 0;
-            for (int i : list) {
-                nbf.write((list.size() > counter) ? i + "," : i + "");
-                counter++;
-                nbf.newLine();
-            }
-        } catch (IOException e) {
-            System.out.println("IOException");
-        }
-
-    }
-
-    /**
-     * writes hash map to a csv file
-     *
-     * @param dataname name of the csv file
-     * @param map      map of Integers
-     */
-    public static void writeMap(String dataname, HashMap<Integer, Integer> map) {
-        try (BufferedWriter nbf = new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(dataname, true)))) {
-
-            int counter = 0;
-            for (Map.Entry<Integer, Integer> time : map.entrySet()) {
-                nbf.write((map.size() > counter) ? time.getValue() + "," : time.getValue() + "");
-                counter++;
-                nbf.newLine();
-            }
-        } catch (IOException e) {
-            System.out.println("IOException");
-        }
-    }
 
     private int avgTime(HashMap<Integer, Integer> map) {
         int sum = 0;
         for (int i : map.values()) {
             sum += i;
         }
-        //map.size();
-        //System.out.println("SUM = " + sum + ", SIZE = " + map.size());
         return sum / map.size();
     }
 
@@ -247,52 +196,12 @@ public class Simulation {
      */
     public static void main(String[] args) {
 
-        //Simulation simp = new Simulation(true, "FIFO");
-        //simp.run();
-
-        /*
-        simp.waitingTimes.forEach((k, v) -> {
-            System.out.println("ID: " + k + ", waiting time: " + v);
-        });
-
-        System.out.println("Process Time:");
-        simp.processTimes.forEach((k, v) -> {
-            System.out.println("ID: " + k + ", process time: " + v);
-        });
-
-        for(Map.Entry<Integer, Integer> entry : simp.waitingTimes.entrySet()) {
-            int key = entry.getKey();
-            simp.dwellTimes.put(key, simp.waitingTimes.get(key) + simp.processTimes.get(key));
-        }
-         */
-
-        // print the average waiting, process and dwell time
-        // TODO when waiting time is > 1, the dwell time is wait+process+1 and not wait+process
-        //System.out.println(simp.avgTime(simp.waitingTimes));
-        //System.out.println(simp.avgTime(simp.processTimes));
-        //System.out.println(simp.avgTime(simp.dwellTimes));
-
-
-/*
-        double averagePeopleInCar = simp.peopleInCar
-                .stream()
-                .mapToInt(Integer::intValue)
-                .summaryStatistics()
-                .getAverage();
-        System.out.println("Task 1.3");
-        System.out.println("Average people in one car: " + averagePeopleInCar);
-
-        double averageCarsInTestingLane = simp.peopleInLane
-                .stream()
-                .mapToInt(Integer::intValue)
-                .summaryStatistics()
-                .getAverage();
-        System.out.println("Average cars in testing lane: " + averageCarsInTestingLane);
-
-        System.out.println("Leaving because of full queue: " + simp.leaveBecauseFull);
-*/
+        // change log to true if output needed
+        Simulation simp = new Simulation(false, "FIFO");
+        simp.run();
 
         // case FIFO
+        System.out.println("Change peopleInNextCar to get relevant results");
         System.out.println("-------------CASE FIFO-------------");
         ArrayList<Integer> fifoWaitingTimes = new ArrayList<>();
         ArrayList<Integer> fifoProcessingTimes = new ArrayList<>();
@@ -324,7 +233,7 @@ public class Simulation {
         System.out.println();
 
 
-        // case FIFO
+        // case LIFO
         System.out.println("-------------CASE LIFO-------------");
         ArrayList<Integer> lifoWaitingTimes = new ArrayList<>();
         ArrayList<Integer> lifoProcessingTimes = new ArrayList<>();
@@ -356,7 +265,7 @@ public class Simulation {
         System.out.println();
 
 
-        // case FIFO
+        // case SPT
         System.out.println("-------------CASE SPT-------------");
         ArrayList<Integer> sptWaitingTimes = new ArrayList<>();
         ArrayList<Integer> sptProcessingTimes = new ArrayList<>();
@@ -388,7 +297,7 @@ public class Simulation {
         System.out.println();
 
 
-        // case FIFO
+        // case LPT
         System.out.println("-------------CASE LPT-------------");
         ArrayList<Integer> lptWaitingTimes = new ArrayList<>();
         ArrayList<Integer> lptProcessingTimes = new ArrayList<>();
@@ -417,31 +326,6 @@ public class Simulation {
                 .average()
                 .orElse(0.0));
         System.out.println("-----------END CASE LPT------------");
-
-
-/*
-        HashMap<Integer, Double> averageLeavings = new HashMap<>();
-        for (int i = 10; i < 20; i += 2) {
-            ArrayList<Integer> averageLeaving = new ArrayList<>();
-            for (int j = 0; j < 100; j++) {
-                Simulation s = new Simulation(false);
-                s.queueCapacity = i;
-                s.run();
-                averageLeaving.add(s.leaveBecauseFull);
-            }
-            averageLeavings.put(i, averageLeaving.stream()
-                    .mapToInt(Integer::intValue)
-                    .summaryStatistics()
-                    .getAverage());
-        }
-
-        System.out.println("increase for 12: " + averageLeavings.get(10) / averageLeavings.get(12) * 100 + " %");
-        System.out.println("increase for 14: " + averageLeavings.get(10) / averageLeavings.get(14) * 100 + " %");
-        System.out.println("increase for 16: " + averageLeavings.get(10) / averageLeavings.get(16) * 100 + " %");
-        System.out.println("increase for 18: " + averageLeavings.get(10) / averageLeavings.get(18) * 100 + " %");
-*/
-        //writeList("vehiclesOverTime.csv", simp.peopleInLane);
-        //writeMap("dwellTime.csv", simp.dwellTime);
 
     }
 
